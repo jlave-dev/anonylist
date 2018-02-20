@@ -1,96 +1,176 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <h2>Essential Links</h2>
-    <ul>
-      <li>
-        <a href="https://vuejs.org"
-           target="_blank">
-          Core Docs
-        </a>
-      </li>
-      <li>
-        <a href="https://forum.vuejs.org"
-           target="_blank">
-          Forum
-        </a>
-      </li>
-      <li>
-        <a href="https://chat.vuejs.org"
-           target="_blank">
-          Community Chat
-        </a>
-      </li>
-      <li>
-        <a href="https://twitter.com/vuejs"
-           target="_blank">
-          Twitter
-        </a>
-      </li>
-      <br>
-      <li>
-        <a href="http://vuejs-templates.github.io/webpack/"
-           target="_blank">
-          Docs for This Template
-        </a>
-      </li>
-    </ul>
-    <h2>Ecosystem</h2>
-    <ul>
-      <li>
-        <a href="http://router.vuejs.org/"
-           target="_blank">
-          vue-router
-        </a>
-      </li>
-      <li>
-        <a href="http://vuex.vuejs.org/"
-           target="_blank">
-          vuex
-        </a>
-      </li>
-      <li>
-        <a href="http://vue-loader.vuejs.org/"
-           target="_blank">
-          vue-loader
-        </a>
-      </li>
-      <li>
-        <a href="https://github.com/vuejs/awesome-vue"
-           target="_blank">
-          awesome-vue
-        </a>
-      </li>
-    </ul>
-  </div>
+  <section class="hero is-info is-fullheight is-bold">
+    <div class="hero-heading">
+      <div class="container">
+        <div class="navbar-brand">
+          <div class="navbar-item">
+            <img src="/static/arrow.png">
+            <div class="field">
+              <p class="control">
+                <input class="input code-input"
+                       type="text"
+                       placeholder="Identifier code"
+                       v-model="code">
+              </p>
+              <p class="help is-white">
+                Type code above or after URL as '/?code=YOUR_CODE' to <br> find your items later!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-one-third">
+            <transition enter-active-class="animated fadeIn"
+                        leave-active-class="animated fadeOut">
+              <div v-if="items.length"
+                   class="box">
+                <div class="menu">
+                  <ul class="menu-list">
+                    <li :key="i"
+                        v-for="(item, i) in items">
+                      <a>
+                        {{ item }}
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </transition>
+            <div class="field is-grouped"
+                 style="width: 100%">
+              <p class="control is-expanded has-icons-right">
+                <input class="input"
+                       type="text"
+                       placeholder="Add an item"
+                       v-model="newItem"
+                       @keyup.enter="postItem">
+                <span v-if="newItem"
+                      class="input-icon icon is-small is-right"
+                      @click="clearInput">
+                  <i class="far fa-times-circle"></i>
+                </span>
+              </p>
+              <p class="control">
+                <a class="button is-info is-inverted is-outlined"
+                   @click="postItem"
+                   :disabled="newItem.length === 0">
+                  Save
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </template>
 
 <script>
+import debounce from 'debounce';
+import randomHex from 'crypto-random-hex';
+
 export default {
-  name: 'HelloWorld',
   data() {
     return {
-      msg: 'Welcome to Your Vue.js App',
+      newItem: '',
+      items: [],
+      code: '',
+      isLoading: false,
     };
+  },
+
+  watch: {
+    code() {
+      this.items = [];
+      debounce(this.onCodeInput, 1000)();
+    },
+  },
+
+  methods: {
+    onCodeInput() {
+      window.localStorage.setItem('code', this.code);
+      const { code } = this;
+      // get items with new code
+      fetch('http://localhost:8081/', {
+        headers: {
+          'content-type': 'application/json',
+          'X-Code': code,
+        },
+        method: 'GET',
+      })
+        .then(response => response.json())
+        .then((json) => {
+          this.items = json.items;
+        });
+    },
+
+    clearInput() {
+      this.newItem = '';
+    },
+
+    postItem() {
+      const { code, newItem: item } = this;
+      fetch('http://localhost:8081/', {
+        body: JSON.stringify({ item }),
+        headers: {
+          'content-type': 'application/json',
+          'X-Code': code,
+        },
+        method: 'POST',
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            this.items.push(item);
+            this.clearInput();
+          }
+        });
+    },
+  },
+
+  beforeRouteEnter(to, from, next) {
+    if (to.query.code) {
+      window.localStorage.setItem('code', to.query.code);
+      return next('/');
+    } else if (to.query.code === '') {
+      return next('/');
+    }
+    return next();
+  },
+
+  mounted() {
+    this.code = this.$route.query.code || window.localStorage.getItem('code') || randomHex(16);
   },
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h1,
-h2 {
-  font-weight: normal;
+.control.has-icons-right .icon {
+  cursor: default;
+  pointer-events: all;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
+
+.code-input,
+.code-input:hover,
+.code-input.is-active,
+.code-input.is-focused,
+.code-input:active,
+.code-input:focus {
+  background: none;
+  color: white;
+  box-shadow: none;
+  border-color: rgba(0, 0, 0, 0);
+  border-bottom: 1px solid white;
 }
-li {
-  display: inline-block;
-  margin: 0 10px;
+
+::placeholder {
+  color: #888;
 }
-a {
-  color: #42b983;
+
+.code-input::placeholder {
+  color: #eee;
 }
 </style>
