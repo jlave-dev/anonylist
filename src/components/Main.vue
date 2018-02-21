@@ -27,16 +27,37 @@
             <transition enter-active-class="animated fadeIn"
                         leave-active-class="animated fadeOut">
               <div v-if="items.length"
-                   class="box">
-                <div class="menu">
-                  <ul class="menu-list">
-                    <li :key="i"
-                        v-for="(item, i) in items">
-                      <a>
-                        {{ item }}
-                      </a>
-                    </li>
-                  </ul>
+                   class="card">
+                <div class="card-header">
+                  <div class="card-header-title"></div>
+                  <div class="card-header-icon">
+                    <div class="field">
+                      <div class="control has-icons-left">
+                        <div class="select is-small">
+                          <select v-model="sortOrder">
+                            <option value="none">None</option>
+                            <option value="ascending">Ascending (A-Z)</option>
+                            <option value="descending">Descending (Z-A)</option>
+                          </select>
+                        </div>
+                        <span class="icon is-small is-left">
+                          <i class="fas fa-sort-alpha-up"></i>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-content">
+                  <div class="menu">
+                    <ul class="menu-list">
+                      <li :key="i"
+                          v-for="(item, i) in sortedItems">
+                        <a>
+                          {{ item }}
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </transition>
@@ -81,7 +102,22 @@ export default {
       items: [],
       code: '',
       isLoading: false,
+      sortOrder: 'none',
     };
+  },
+
+  computed: {
+    sortedItems() {
+      const itemsCopy = [...this.items];
+      switch (this.sortOrder) {
+        case 'ascending':
+          return itemsCopy.sort((a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : 1));
+        case 'descending':
+          return itemsCopy.sort((a, b) => (a.toLowerCase() < b.toLowerCase() ? 1 : -1));
+        default:
+          return this.items;
+      }
+    },
   },
 
   watch: {
@@ -156,6 +192,10 @@ export default {
 </script>
 
 <style scoped>
+.card {
+  margin-bottom: 1rem;
+}
+
 .control.has-icons-right .icon {
   cursor: default;
   pointer-events: all;
