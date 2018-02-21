@@ -62,6 +62,7 @@
                 </a>
               </p>
             </div>
+            <vue-alert></vue-alert>
           </div>
         </div>
       </div>
@@ -126,6 +127,13 @@ export default {
           if (response.status === 200) {
             this.items.push(item);
             this.clearInput();
+          } else {
+            response.json()
+              .then(({ message }) => {
+                if (message) {
+                  this.$alert.danger({ message });
+                }
+              });
           }
         });
     },
