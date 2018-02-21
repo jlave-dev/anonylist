@@ -10,6 +10,7 @@ app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+// simple in-memory data store
 const db = {};
 
 app.get('/', (req, res) => {
@@ -22,6 +23,9 @@ app.post('/', (req, res) => {
   const code = req.get('X-Code');
   const { item } = req.body;
   if (db[code]) {
+    if (db[code].includes(item)) {
+      return res.status(409).send({ message: 'Item already exists' });
+    }
     db[code].push(item);
   } else {
     db[code] = [item];
