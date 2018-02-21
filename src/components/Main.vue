@@ -131,7 +131,7 @@ export default {
       if (newOrder) {
         window.localStorage.setItem('sortOrder', newOrder);
       }
-    }
+    },
   },
 
   methods: {
@@ -139,7 +139,7 @@ export default {
       window.localStorage.setItem('code', this.code);
       const { code } = this;
       // get items with new code
-      fetch('http://localhost:8081/', {
+      fetch('/api/', {
         headers: {
           'content-type': 'application/json',
           'X-Code': code,
@@ -158,7 +158,7 @@ export default {
 
     postItem() {
       const { code, newItem: item } = this;
-      fetch('http://localhost:8081/', {
+      fetch('/api/', {
         body: JSON.stringify({ item }),
         headers: {
           'content-type': 'application/json',
