@@ -126,6 +126,12 @@ export default {
       this.items = [];
       debounce(this.onCodeInput, 2000)();
     },
+
+    sortOrder(newOrder) {
+      if (newOrder) {
+        window.localStorage.setItem('sortOrder', newOrder);
+      }
+    }
   },
 
   methods: {
@@ -188,6 +194,7 @@ export default {
 
   mounted() {
     this.code = this.$route.query.code || window.localStorage.getItem('code') || randomHex(16);
+    this.sortOrder = window.localStorage.getItem('sortOrder') || 'none';
   },
 };
 </script>
