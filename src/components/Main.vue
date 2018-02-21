@@ -34,7 +34,8 @@
                     <div class="field">
                       <div class="control has-icons-left">
                         <div class="select is-small">
-                          <select v-model="sortOrder">
+                          <select v-model="sortOrder"
+                                  :disabled="items.length <= 1">
                             <option value="none">None</option>
                             <option value="ascending">Ascending (A-Z)</option>
                             <option value="descending">Descending (Z-A)</option>
@@ -123,7 +124,7 @@ export default {
   watch: {
     code() {
       this.items = [];
-      debounce(this.onCodeInput, 1000)();
+      debounce(this.onCodeInput, 2000)();
     },
   },
 
