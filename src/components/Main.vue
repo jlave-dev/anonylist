@@ -13,7 +13,7 @@
                        v-model="code">
               </p>
               <p class="help is-white">
-                Type code above or after URL as '/?code=YOUR_CODE' to <br> find your items later!
+                Type code above or after URL as '/?code=YOUR_CODE' to find your items later!
               </p>
             </div>
           </div>
@@ -228,5 +228,9 @@ export default {
 
 .code-input::placeholder {
   color: #eee;
+}
+
+.navbar-item {
+  max-width: 100vw;
 }
 </style>
