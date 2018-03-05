@@ -1,13 +1,13 @@
 {
-  "name": "uncorkd-recruitment",
+  "name": "anonylist",
   "version": "1.0.0",
-  "description": "A Vue.js project",
+  "description": "Anonymously create and share lists",
   "author": "James Lave <james@lave.cf>",
   "private": true,
   "scripts": {
     "dev:client": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
     "dev:server": "nodemon server.js",
-    "dev:start": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "build": "node build/build.js"
   },
   "dependencies": {
