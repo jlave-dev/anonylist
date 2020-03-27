@@ -7,7 +7,7 @@
   "scripts": {
     "dev:client": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
     "dev:server": "nodemon server.js",
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev": "concurrently \"nodemon -e js,vue --ignore dist/ --ignore functions/ build/build.js\" \"firebase emulators:start\"",
     "build": "node build/build.js"
   },
   "dependencies": {
@@ -35,10 +35,10 @@
     "concurrently": "^3.5.1",
     "copy-webpack-plugin": "^4.0.1",
     "css-loader": "^0.28.0",
-    "eslint": "^4.18.0",
-    "eslint-config-airbnb-base": "^12.1.0",
-    "eslint-plugin-import": "^2.8.0",
-    "eslint-plugin-vue": "^4.2.2",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-vue": "^6.2.2",
     "extract-text-webpack-plugin": "^3.0.0",
     "file-loader": "^1.1.4",
     "friendly-errors-webpack-plugin": "^1.6.1",
