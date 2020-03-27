@@ -1,9 +1,9 @@
 module.exports = {
     'extends': [
         'airbnb-base',
-        'plugin:vue/base',
+        'plugin:vue/recommended'
     ],
-    'rules': {
-        'no-param-reassign': 0,
+    'globals': {
+        'firebase': 'readonly'
     }
 };
