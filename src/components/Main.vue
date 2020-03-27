@@ -7,13 +7,19 @@
             <img src="/static/arrow.png">
             <div class="field">
               <p class="control">
-                <input class="input code-input"
-                       type="text"
-                       placeholder="Identifier code"
-                       v-model="code">
+                <input
+                  v-model="code"
+                  class="input code-input"
+                  type="text"
+                  placeholder="Identifier code"
+                >
               </p>
               <p class="help is-white">
-                Type code above or after URL as '/?code=YOUR_CODE' to find your items later!
+                Type code above or use <a
+                  class="link"
+                  :href="listUrl"
+                  target="_blank"
+                >this URL</a> to find your items later!
               </p>
             </div>
           </div>
@@ -24,25 +30,37 @@
       <div class="container">
         <div class="columns is-centered">
           <div class="column is-one-third">
-            <transition enter-active-class="animated fadeIn"
-                        leave-active-class="animated fadeOut">
-              <div v-if="items.length"
-                   class="card">
+            <transition
+              enter-active-class="animated fadeIn"
+              leave-active-class="animated fadeOut"
+            >
+              <div
+                v-if="items.length"
+                class="card"
+              >
                 <div class="card-header">
-                  <div class="card-header-title"></div>
+                  <div class="card-header-title" />
                   <div class="card-header-icon">
                     <div class="field">
                       <div class="control has-icons-left">
                         <div class="select is-small">
-                          <select v-model="sortOrder"
-                                  :disabled="items.length <= 1">
-                            <option value="none">None</option>
-                            <option value="ascending">Ascending (A-Z)</option>
-                            <option value="descending">Descending (Z-A)</option>
+                          <select
+                            v-model="sortOrder"
+                            :disabled="items.length <= 1"
+                          >
+                            <option value="none">
+                              None
+                            </option>
+                            <option value="ascending">
+                              Ascending (A-Z)
+                            </option>
+                            <option value="descending">
+                              Descending (Z-A)
+                            </option>
                           </select>
                         </div>
                         <span class="icon is-small is-left">
-                          <i class="fas fa-sort-alpha-up"></i>
+                          <i class="fas fa-sort-alpha-up" />
                         </span>
                       </div>
                     </div>
@@ -51,10 +69,15 @@
                 <div class="card-content">
                   <div class="menu">
                     <ul class="menu-list">
-                      <li :key="i"
-                          v-for="(item, i) in sortedItems">
-                        <a>
+                      <li
+                        v-for="(item, i) in sortedItems"
+                        :key="i"
+                      >
+                        <a style="display: flex; justify-content: space-between">
                           {{ item }}
+                          <div @click="deleteItem(item)">
+                            <i class="far fa-trash-alt" />
+                          </div>
                         </a>
                       </li>
                     </ul>
@@ -62,29 +85,37 @@
                 </div>
               </div>
             </transition>
-            <div class="field is-grouped"
-                 style="width: 100%">
+            <div
+              class="field is-grouped"
+              style="width: 100%"
+            >
               <p class="control is-expanded has-icons-right">
-                <input class="input"
-                       type="text"
-                       placeholder="Add an item"
-                       v-model="newItem"
-                       @keyup.enter="postItem">
-                <span v-if="newItem"
-                      class="input-icon icon is-small is-right"
-                      @click="clearInput">
-                  <i class="far fa-times-circle"></i>
+                <input
+                  v-model="newItem"
+                  class="input"
+                  type="text"
+                  placeholder="Add an item"
+                  @keyup.enter="postItem"
+                >
+                <span
+                  v-if="newItem"
+                  class="input-icon icon is-small is-right"
+                  @click="clearInput"
+                >
+                  <i class="far fa-times-circle" />
                 </span>
               </p>
               <p class="control">
-                <a class="button is-info is-inverted is-outlined"
-                   @click="postItem"
-                   :disabled="newItem.length === 0">
+                <a
+                  class="button is-info is-inverted is-outlined"
+                  :disabled="newItem.length === 0"
+                  @click="postItem"
+                >
                   Save
                 </a>
               </p>
             </div>
-            <vue-alert></vue-alert>
+            <vue-alert />
           </div>
         </div>
       </div>
@@ -108,6 +139,10 @@ export default {
   },
 
   computed: {
+    listUrl() {
+      return `${window.location.href}?code=${this.code}`;
+    },
+
     sortedItems() {
       const itemsCopy = [...this.items];
       switch (this.sortOrder) {
@@ -134,51 +169,59 @@ export default {
     },
   },
 
+  mounted() {
+    this.code = this.$route.query.code || window.localStorage.getItem('code') || randomHex(16);
+    this.sortOrder = window.localStorage.getItem('sortOrder') || 'none';
+  },
+
   methods: {
-    onCodeInput() {
+    async onCodeInput() {
+      this.isLoading = true;
       window.localStorage.setItem('code', this.code);
-      const { code } = this;
       // get items with new code
-      fetch('/api/', {
-        headers: {
-          'content-type': 'application/json',
-          'X-Code': code,
-        },
-        method: 'GET',
-      })
-        .then(response => response.json())
-        .then((json) => {
-          this.items = json.items;
-        });
+      const listSnapshot = await firebase.firestore().collection('lists').doc(this.code).get();
+      if (listSnapshot.exists) {
+        this.items = listSnapshot.get('items') || [];
+      } else {
+        await listSnapshot.ref.set({ items: [] });
+        this.items = [];
+      }
+      this.isLoading = false;
     },
 
     clearInput() {
       this.newItem = '';
     },
 
-    postItem() {
-      const { code, newItem: item } = this;
-      fetch('/api/', {
-        body: JSON.stringify({ item }),
-        headers: {
-          'content-type': 'application/json',
-          'X-Code': code,
-        },
-        method: 'POST',
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            this.items.push(item);
-            this.clearInput();
-          } else {
-            response.json()
-              .then(({ message }) => {
-                if (message) {
-                  this.$alert.danger({ message });
-                }
-              });
-          }
+    async postItem() {
+      try {
+        const list = await firebase.firestore().collection('lists').doc(this.code).get();
+        if (list.exists) {
+          await firebase.firestore().collection('lists').doc(this.code).update({
+            items: firebase.firestore.FieldValue.arrayUnion(this.newItem),
+          });
+        } else {
+          await firebase.firestore().collection('lists').doc(this.code).set({
+            items: [this.newItem],
+          });
+        }
+        this.items.push(this.newItem);
+        this.clearInput();
+      } catch (error) {
+        this.$alert.danger({ message: error.message || 'Could not save item.' });
+      }
+    },
+
+    async deleteItem(itemToDelete) {
+      console.log('deleteItem', itemToDelete);
+      try {
+        await firebase.firestore().collection('lists').doc(this.code).update({
+          items: firebase.firestore.FieldValue.arrayRemove(itemToDelete),
         });
+        this.items = this.items.filter((item) => item !== itemToDelete);
+      } catch (error) {
+        this.$alert.danger({ message: error.message || 'Could not delete item.' });
+      }
     },
   },
 
@@ -186,20 +229,19 @@ export default {
     if (to.query.code) {
       window.localStorage.setItem('code', to.query.code);
       return next('/');
-    } else if (to.query.code === '') {
+    } if (to.query.code === '') {
       return next('/');
     }
     return next();
-  },
-
-  mounted() {
-    this.code = this.$route.query.code || window.localStorage.getItem('code') || randomHex(16);
-    this.sortOrder = window.localStorage.getItem('sortOrder') || 'none';
   },
 };
 </script>
 
 <style scoped>
+a.link {
+  text-decoration: underline;
+}
+
 .card {
   margin-bottom: 1rem;
 }
